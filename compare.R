@@ -1,7 +1,3 @@
-# TODO: Add comment
-# 
-# Author: Greg Miller
-###############################################################################
 library(yaml)
 library(abind)
 library(reshape2)
