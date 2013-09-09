@@ -1,0 +1,13 @@
+abbrev  : lax
+name    : Los Angeles
+gdb     : D:\\urbphen\\datasets\\lax.gdb
+outpath : D:\\urbphen\\netcdf\\lax
+yaml    : D:\\urbphen\\netcdf\\lax\\info.yaml
+netcdf  : D:\\urbphen\\netcdf\\lax\\data.nc
+climate_type: med
+climate_rank: 6
+
+ClipModisGDB:
+  refraster: D:\\urbphen\\NewLAX\\LAX1
+  outpath: D:\\urbphen\\NewLAX
+  outgdb: lax.gdb

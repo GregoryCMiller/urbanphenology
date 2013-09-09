@@ -1,0 +1,24 @@
+maxt        : null
+importmodis : True
+airportwx   : True
+prism_ppt   : true
+scale       : 0.035
+
+accumulate:
+  - var  : PRCP
+    times : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  - var  : PRCPS
+    times : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+r: 
+  - C:\\Users\\Greg Miller\\Dropbox\\Scripts\\urbphen\\util.R
+
+nlcdcol: D:\\urbphen\\NLCD2006\\nlcdinfo.csv
+excludevars:
+  - xcoord
+  - ycoord
+  - tcoord
+  - FAVINC0
+  - BLTBEF80
+  - BLTAFT80
+  - NLCD

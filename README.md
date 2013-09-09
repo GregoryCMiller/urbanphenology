@@ -13,23 +13,25 @@ Environmental Research Letters (in press)
 | Variable       | Source                                                           |
 |----------------|------------------------------------------------------------------|
 | Growing season | MODIS 16 day 250 meter EVI (enhanced vegetation index) 2000-2010 |
-| Precipitation  | Airport weather stations                                         |
+| Precipitation  | Airport weather stations (daily ppt)                             |
 | Land cover     | NLCD 2006                                                        |
 | Income         | Census block income variable in shapefile format                 |
 
 
 ### Code Files 
 
-File        | Description                         |
-------------|-------------------------------------|
-PreProc.py  | extract source data to netcdf       |
-main.R      | main statistical analysis           |
-util.R      | netcdf utility functions            |
-phenology.R | phenology                           |
-compare.R   | Compare multiple studies            |
+File             | Description                         |
+-----------------|-------------------------------------|
+create_netcdf.py | extract source data to netcdf       |
+main.R           | main statistical analysis           |
+util.R           | netcdf utility functions            |
+phenology.R      | phenology                           |
+compare.R        | Compare multiple studies            |
 
 
 ### Create netcdf data files
+
+
 
 ### Statistical Analysis 
 
@@ -43,7 +45,7 @@ MIT license
  
 ### Author 
 
-Greg Miller
+Greg Miller 
 
 Department of Earth Sciences 
 
