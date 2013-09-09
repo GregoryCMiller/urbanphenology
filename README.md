@@ -44,6 +44,9 @@ MIT license
 ### Author 
 
 Greg Miller
+
 Department of Earth Sciences 
+
 University of California, Riverside
+
 gmill002@gmail.com
