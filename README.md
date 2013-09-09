@@ -7,15 +7,15 @@ Darrel Jenerette, Greg Miller, Alexander Buyantuyev, Diane E Pataki, Thomas Gill
 Urban vegetation dynamics and income segregation in drylands: A synthesis of seven metropolitan regions in the southwestern United States. 
 Environmental Research Letters (in press)
 
-## Code Files 
+## Code Files
 
-| File         | Description                         |
-| -------------| ----------------------------------- |
-| create_nc.py | extract source data to netcdf       |
-| main.R       | main statistical analysis           |
-| util.R       | netcdf utility functions            |
-| phenology.R  | phenology functions                 |
-| compare.R    | Compare multiple studies            |
+| File         | Description                                                 |
+| -------------| ----------------------------------------------------------- |
+| create_nc.py | create netcdf file, extract source data to netcdf variables |
+| main.R       | top level statistical analysis script                       |
+| util.R       | netcdf utility functions - dates, plot maps, correlations   |
+| phenology.R  | phenology metrics, means by groups                          |
+| compare.R    | Aggregate and compare results from multiple studies         |
 
 ## Author
 
@@ -25,3 +25,4 @@ gmill002@gmail.com
 ## License
 
 Licensed under [MIT](http://www.opensource.org/licenses/mit-license.php).
+
