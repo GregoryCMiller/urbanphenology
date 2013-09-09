@@ -1,35 +1,100 @@
-# Copyright (C) 2013 Greg Miller <gmill002@gmail.com>
 """
-Urban Phenology Data Processing
+Urban Phenology - Create x,y,t netcdf file, sample source data to create variables 
 
+Usage: 
+  python create_nc.py config.yaml
 
+Inputs: 
+  config.yaml: one or more yaml files specifying configuration parameters
 
-1. Data Prep
-  A. Initialize
-    - Create a config file listing data and parameters
-    - Import MODIS data and set as reference grid / times
-    - Extract MODIS as 3d numpy data array
-  B. Static
-    * resample grid to ref
-    - landcover
-    - develop
+Outputs:
+  x,y,t netcdf data file with created variables 
+
+Requires:
+- numpy
+- netCDF4
+- arcpy, spatial analyst
+- pyYAML
     
-  C. TimeSeries
-    - resample ts
-    - prcp, tmax, tmin
-    - TempLag, PRCPaccumulate
-    - 
-  
-2. Analysis
-  - Spearman rank correlation coefs between modis evi and climate vars
-  !- Correlations should support lag, accumulation, spatial shift, masking
+Procedure:
 
-Summaries and Graphics
-  !- time series summary vars
-  !- time series summary by land use
-  !- cor coefs as a function of lag, accumulation, shift, mask
-  !- 
+1. Initialize
+  - create single config file listing all parameters
+  - create x,y,t netcdf file using MODIS gdb spatial reference and time series dates 
 
+2. MODIS EVI data
+  - Extract MODIS gdb to netcdf file as 3-d variable, filter using QC data 
+
+3. Census income data
+
+4. Land cover    
+  - Reclassify categories
+  - aggregate into 250m grid using minimum majority percentage
+  - add to netcdf as 2-d variable
+
+5. Precipitation
+  - aggregate (sum) daily weather into our time series dates
+  - create derived lag or accumulate variables
+
+    
+Example Config File
+===================
+
+# general, paths, rain year cutoff  
+abbrev  : abq                                     # abbrev used to create names and expected in many file names                
+name    : Albuquerque                             # study full name 
+gdb     : I:\\urbphen\\ws_done\\datasets\\abq.gdb # source GDB of EVI rasters 
+outpath : I:\\urbphen\\netcdf\\abq                # created output folder
+yaml    : I:\\urbphen\\netcdf\\abq\\info.yaml     # output of parameters used for this run
+netcdf  : I:\\urbphen\\netcdf\\abq\\data.nc       # output data file
+
+climate_type: semiarid   # not important
+climate_rank: 3          # controls ordering on plots
+rainyearmonth : 12       # rain year cutoff month 
+rainyearday : 31         # rain year cutoff day
+maxt        : null       # max number of time steps
+importmodis : True       # import modis
+airportwx   : True       # import airport weather
+prism_ppt   : False      # import prism ppt
+
+# add annual prism ppt variable
+AnnualPrism:
+  var: APRI
+  path: 'I:\\urbphen\\AnnualPrism\\us_ppt'
+
+# census data 
+JoinCensus:
+  tractshp : I:\\urbphen\\JoinedCensusTracts\\abq.shp
+  extractfields:
+    - FAVINC0
+    - BLTBEF80
+    - BLTAFT80
+
+# input / output landcover file, reclassification mapping
+NLCD_Prep:
+  file: I:\\urbphen\\NLCD2001\\save\\abq0
+  outfile : I:\\urbphen\\NLCD2001\\abq1
+  origvals: [11, 12, 21, 22, 23, 24, 31, 41, 42, 43, 52, 71, 81, 82, 90, 95]   
+  newvals : [10, 10, 21, 21, 23, 23, 30, 40, 40, 40, 50, 50, 81, 82, 90, 90]
+  thresh : 0.70 # aggregation minimum threshold
+
+landcover:
+  file: I:\\urbphen\\NLCD2001\\abq1
+  name : NLCD
+  dtype: i1
+  units: land cover category
+  description: Land cover aggregated from NLCD 2001
+
+scale       : 0.035                             # scale for plotting maps
+nlcdcol: I:\\urbphen\\NLCD2006\\nlcdinfo.csv    # csv file of color preferences
+excludevars:                                    # variables not summarized
+  - xcoord
+  - ycoord
+  - tcoord
+  - FAVINC0
+  - BLTBEF80
+  - BLTAFT80
+  - NLCD
 
 """
 import time
@@ -560,12 +625,8 @@ def AccumVar(info):
     rootgrp.close()        
     WriteYaml(info)
 
-###################### 
-
 def JoinCensus(info, tractshp='', extractfields=[]):
     """given a polygon shapefile, extract a field as a raster then add to netcdf"""
-    #pdb.set_trace()
-    
     info = ReadYaml(info['yaml'])
     arcpy.env.snapraster = info['refraster']
     arcpy.env.workspace = os.path.dirname(tractshp)
@@ -598,7 +659,6 @@ def WriteYaml(info):
     yaml.dump(info, f, default_flow_style=False)
     f.close()
     
-###################### 
 
 if __name__ == '__main__':
     if len(sys.argv) >= 2:

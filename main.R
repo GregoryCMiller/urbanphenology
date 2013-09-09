@@ -1,13 +1,22 @@
+#' Urban Phenology Main Analysis Function
+#'
+#' Usage: 
+#'   Rscript main.R studydir
+#'   
+#' Inputs:
+#'   studydir : dir containing output from create_nc.py including data.nc and info.yaml
+#'   
+
 homedir <- 'I:\\urbphen\\Gregs_Scripts_NLCDpatch'
 source(file.path(homedir,'Util.R'))
 source(file.path(homedir,'phenology.R'))
 source(file.path(homedir,'CorrelationMatrix.R'))
 
 # Manual control of analysis functions
-COVERMAP  <- !TRUE
-PHENOLOGY <- !TRUE
+COVERMAP  <- TRUE
+PHENOLOGY <- TRUE
 PRISM     <- TRUE
-CORCOEFS  <- !TRUE
+CORCOEFS  <- TRUE
 CLUSTER   <- FALSE
 POINTCOR  <- FALSE
 
@@ -60,9 +69,6 @@ MainUrbPhen <- function(studydir){
 	if (CORCOEFS){
 		info <- CorrCoefs(info,nc,subs)
 	}
-	
-	#Wavelet Correlation mx
-	#RunCorMx(nc,info,subs)
 	
   # Prism annual data
   if (PRISM){

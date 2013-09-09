@@ -1,3 +1,4 @@
+#' Netcdf utilities 
 library(yaml)
 library(ncdf)
 

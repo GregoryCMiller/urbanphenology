@@ -1,4 +1,4 @@
-library(cluster)
+#' Phenology calculation functions and summaries
 
 PRISM_PPT <- function(info,nc){
   
@@ -186,7 +186,8 @@ PhenMetrics <- function(info, nc, varname, n_plot=200){
 
 #' apply kmeans clustering to the smoothed time series
 PhenClusters <- function(info, nc, varname, nclust, samples=100, sampsize=1000){
-	#browser()
+  require(cluster)
+  #browser()
 	start <- Sys.time()
 	cat('\nK-Medoids Clustering...')
 	

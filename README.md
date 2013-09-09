@@ -20,13 +20,13 @@ Environmental Research Letters (in press)
 
 ### Code Files 
 
-File             | Description                         |
------------------|-------------------------------------|
-create_netcdf.py | extract source data to netcdf       |
-main.R           | main statistical analysis           |
-util.R           | netcdf utility functions            |
-phenology.R      | phenology                           |
-compare.R        | Compare multiple studies            |
+File         | Description                         |
+-------------|-------------------------------------|
+create_nc.py | extract source data to netcdf       |
+main.R       | main statistical analysis           |
+util.R       | netcdf utility functions            |
+phenology.R  | phenology                           |
+compare.R    | Compare multiple studies            |
 
 
 ### Create netcdf data files

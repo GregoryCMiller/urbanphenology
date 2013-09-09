@@ -1,3 +1,4 @@
+#' functions for comparing multiple study results 
 library(yaml)
 library(abind)
 library(reshape2)
