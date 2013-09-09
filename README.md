@@ -21,8 +21,3 @@ Environmental Research Letters (in press)
 
 Greg Miller
 gmill002@gmail.com
-
-## License
-
-Licensed under [MIT](http://www.opensource.org/licenses/mit-license.php).
-
