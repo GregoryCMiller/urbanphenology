@@ -1,4 +1,4 @@
-urban Phenology
+Urban Phenology
 ===============
 
 Data and analysis procedures used in
@@ -7,7 +7,7 @@ Darrel Jenerette, Greg Miller, Alexander Buyantuyev, Diane E Pataki, Thomas Gill
 Urban vegetation dynamics and income segregation in drylands: A synthesis of seven metropolitan regions in the southwestern United States. 
 Environmental Research Letters (in press)
 
-### Code Files 
+## Code Files 
 
 | File         | Description                         |
 | -------------| ----------------------------------- |
@@ -17,17 +17,11 @@ Environmental Research Letters (in press)
 | phenology.R  | phenology functions                 |
 | compare.R    | Compare multiple studies            |
 
+## Author
 
-### License
-
-MIT license
- 
-### Author 
-
-Greg Miller 
-
-Department of Earth Sciences 
-
-University of California, Riverside
-
+Greg Miller
 gmill002@gmail.com
+
+## License
+
+Licensed under [MIT](http://www.opensource.org/licenses/mit-license.php).
