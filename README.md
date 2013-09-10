@@ -3,11 +3,12 @@ Urban Phenology
 
 Data and analysis procedures used in
 
-Darrel Jenerette, Greg Miller, Alexander Buyantuyev, Diane E Pataki, Thomas Gillespie, Stephanie Pincetl. 
-Urban vegetation dynamics and income segregation in drylands: A synthesis of seven metropolitan regions in the southwestern United States. 
-Environmental Research Letters (in press)
+> Darrel Jenerette, Greg Miller, Alexander Buyantuyev, Diane E Pataki, Thomas Gillespie, Stephanie Pincetl. 
+> Urban vegetation dynamics and income segregation in drylands: 
+>   A synthesis of seven metropolitan regions in the southwestern United States. 
+> Environmental Research Letters (in press)
 
-## Code Files
+### Code Files
 
 | File         | Description                                                 |
 | -------------| ----------------------------------------------------------- |
@@ -17,7 +18,6 @@ Environmental Research Letters (in press)
 | phenology.R  | phenology metrics, means by groups                          |
 | compare.R    | Aggregate and compare results from multiple studies         |
 
-## Author
+### Author
 
-Greg Miller
-gmill002@gmail.com
+[Greg Miller](gmill002@gmail.com)
