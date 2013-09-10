@@ -100,7 +100,7 @@ CorrCoefs <- function(info,nc,sub,maxn=2000){
   
   for (r in seq(along=vars)) {
     vname <- vars[r]
-	y <- GetNCVar(nc, vname, NULL)
+	  y <- GetNCVar(nc, vname, NULL)
 	
     for (d in seq(length(info$coverkey$NAME))){
       dval <- info$landcover$uvals[d]

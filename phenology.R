@@ -1,32 +1,6 @@
 #' Phenology calculation functions and summaries
 
-PRISM_PPT <- function(info,nc){
-  
-  #PRISM Precip
-  #======================
-  
-  apri <- apply(get.var.ncdf(nc, 'APRI'), 3, rbind)
-  uyear <- unique(info$dates$year)
-  APRI <- array(NA, dim=c(nrow(apri), length(uyear)))
-  for (i in seq(along=uyear)){
-    idx <- info$dates$year == uyear[i]
-    APRI[,i] <- apply(apri[,idx], 1, sum, na.rm=T)
-  }
-  
-  df <- data.frame(year=as.vector(outer( rep(1,nrow(apri)), uyear)))
-  
-  df$city <- info$abbrev
-  subs <- get.var.ncdf(nc, info$landcover$name)[,,1]
-  df$cat <- as.vector(outer(subs, rep(1,length(uyear))))
-  df$cat <- factor(df$cat,levels=info$coverkey$CODE,labels=info$coverkey$NAME)
-  df$catcode <- as.integer(df$cat)
-  df$ANNPRISMPPT <- as.vector(APRI)
-  sdf <- subset(df, catcode %in% c(1,5))
-  
-  #write.table(df, file='PRISM_pix.csv', sep=',', col.names=NA)
-  write.table(sdf, file='PRISM_pix_15.csv', sep=',', col.names=NA)
-  
-}
+
 #' Calculate Phenology metrics with growing season precipitation
 #'  
 #' SOS,EOS : start / end of season (highest and lowest derivative)
@@ -183,6 +157,119 @@ PhenMetrics <- function(info, nc, varname, n_plot=200){
 	#bef80 <- get.var.ncdf(nc, 'BLTBEF80')[,,1]
 	
 }
+#' Create a new loess smoothed variable from an existing variable. 
+#' Loess applied to each slice in dim 3 [i,j,:]  
+LOESS_Var <- function(info, nc, srcvar, newvar, units, missval, span=5, maxna=0.2){
+  cat('\nloess smooth', srcvar,'...')
+  start <- Sys.time()
+  
+  #create new derived variable if does not already exist
+  if (!(newvar %in% names(nc$var))){ 
+    cat('\n\tcreate var')  
+    close.ncdf( nc )
+    nc <- open.ncdf(info$netcdf, write=TRUE) # open for writing and create variable
+    var <- var.def.ncdf(newvar, units, list(nc$dim[['x']], nc$dim[['y']], nc$dim[['t']]), missval)
+    nc <- var.add.ncdf( nc, var )
+  }
+  close.ncdf(nc) # close the current file
+  
+  # get parent variable and apply smooth function
+  nc <- open.ncdf(info$netcdf,write=TRUE)
+  srcdata <- get.var.ncdf(nc, srcvar)
+  srcdata[srcdata == missval] <- NA
+  rowdata <- apply(srcdata,3,rbind)
+  newdata <- t(apply(rowdata, 1, LOESS_smooth, x=info$dates$integer, span=span/ncol(srcdata) ))
+  newdata <- array(newdata,dim=dim(srcdata))
+  
+  put.var.ncdf( nc, 'sevi', newdata)
+  close.ncdf(nc)
+  
+  # reopen updated file for reading 
+  nc <- open.ncdf(info$netcdf)
+  cat(format(Sys.time() - start))
+  return(nc)
+}
+
+#' gaussian local regression fit (LOESS)
+LOESS_smooth <- function(y, x, span){
+  nacount <- sum(is.na(y))
+  if (nacount > 40){
+    return(y*NA)
+  }
+  fit <- loess(y ~ x, 
+               na.action=na.exclude,
+               family='gaussian',
+               degree=1,
+               span=span
+  )
+  
+  pred <- as.integer(predict(fit, newvals=x))
+  return(pred)
+}
+
+#' PRISM Precip
+PRISM_PPT <- function(info,nc){
+  apri <- apply(get.var.ncdf(nc, 'APRI'), 3, rbind)
+  uyear <- unique(info$dates$year)
+  APRI <- array(NA, dim=c(nrow(apri), length(uyear)))
+  for (i in seq(along=uyear)){
+    idx <- info$dates$year == uyear[i]
+    APRI[,i] <- apply(apri[,idx], 1, sum, na.rm=T)
+  }
+  
+  df <- data.frame(year=as.vector(outer( rep(1,nrow(apri)), uyear)))
+  
+  df$city <- info$abbrev
+  subs <- get.var.ncdf(nc, info$landcover$name)[,,1]
+  df$cat <- as.vector(outer(subs, rep(1,length(uyear))))
+  df$cat <- factor(df$cat,levels=info$coverkey$CODE,labels=info$coverkey$NAME)
+  df$catcode <- as.integer(df$cat)
+  df$ANNPRISMPPT <- as.vector(APRI)
+  sdf <- subset(df, catcode %in% c(1,5))
+  
+  #write.table(df, file='PRISM_pix.csv', sep=',', col.names=NA)
+  write.table(sdf, file='PRISM_pix_15.csv', sep=',', col.names=NA)
+  
+}
+
+WaveletCorr <- function(x,y,lag){
+  cc <- array(NA,dim=length(x))
+  for (i in seq(along=x)){
+    if ((i-lag) >= 1){
+      c <- cor.test(x[(i-lag):i],y[(i-lag):i], method='spearman')
+      cc[i] <- c$estimate 
+    }
+  }
+  return(cc)
+}
+#' Plot individual time series and indicate phenology metrics
+PlotPhen <- function(x, smoy, yearidx, SOS, EOS, n_plot, main='', yearidx2=NULL){	
+  cat('\n\tPlot Phenology Time Series...')
+  #browser()
+  pdf('phenplots.pdf')
+  par(mfrow=c(4,1))
+  cols <- c(rgb(0,1,0,alpha=.4), rgb(1,0,0,alpha=.4))
+  maxy <- max(smoy,na.rm=T)
+  rawy <- smoy
+  for (i in sample(seq(nrow(smoy)),n_plot)){
+    plot(NA, xlim=c(min(x), max(x)), ylim=c(0,maxy))
+    
+    col <- rep(rgb(0,1,0,alpha=.4),length(SOS[i,]))
+    col[SOS[i,] > EOS[i,]] <- rgb(1, 0, 0, alpha=.4)
+    rect(SOS[i,], 0, EOS[i,], maxy, col=col)
+    abline(v=SOS[i,],col='green',lw=2)
+    abline(v=EOS[i,],col='red',lw=2)
+    
+    abline(v=yearidx, col='black',lty=3)
+    abline(v=yearidx2, col='blue',lty=1)
+    points(x, rawy[i,], col='black', pch='+', cex=.5)
+    lines(x, smoy[i,], col='blue')
+    
+  }
+  dev.off()
+  cat('ok')
+}
+
 
 #' apply kmeans clustering to the smoothed time series
 PhenClusters <- function(info, nc, varname, nclust, samples=100, sampsize=1000){
@@ -263,116 +350,4 @@ PhenClusters <- function(info, nc, varname, nclust, samples=100, sampsize=1000){
 	dev.off()
 	cat(format(round(Sys.time() - start,1)))
 	
-	#wavelet correlation? 
-    #====================
-	#prcp <- get.var.ncdf(nc, 'PRCP')[1,1,]
-	#wlet3 <- t(apply(means,1,WaveletCorr,y=prcp,lag=3))
-	#wlet6 <- t(apply(means,1,WaveletCorr,y=prcp,lag=6))
-	
-	#pdf('phen_prcp_corr.pdf',height=1.5*(nclust+1),width=12)
-	#par(mfrow=c(nclust, 1), mai=c(0.5, 0.5, 0.1, 0.1))
-	
-	#for (i in seq(nclust)){
-	#	plot(x=xvals, y=wlet6[i,], 
-	#			col=rainbow(nclust)[i], 
-	#			ylim=c(min(wlet,na.rm=T),max(wlet,na.rm=T)),
-	#			ylab='spearman wavelet correlation',
-	#			xlab='date',
-	#			main=paste('n =', n[i])
-	#	)
-	#	
-	#	#points(x=xvals,y=wlet6[i,],col=rainbow(nclust)[i],pch='+')
-	#	abline(h=0)
-	#	abline(v=info$dates$year_date,col=grey(.5))
-	#	
-	#}
-	#dev.off()
-}
-
-WaveletCorr <- function(x,y,lag){
-	cc <- array(NA,dim=length(x))
-	for (i in seq(along=x)){
-		if ((i-lag) >= 1){
-			c <- cor.test(x[(i-lag):i],y[(i-lag):i], method='spearman')
-			cc[i] <- c$estimate 
-		}
-	}
-	return(cc)
-}
-#' Plot individual time series and indicate phenology metrics
-PlotPhen <- function(x, smoy, yearidx, SOS, EOS, n_plot, main='', yearidx2=NULL){	
-	cat('\n\tPlot Phenology Time Series...')
-	#browser()
-	pdf('phenplots.pdf')
-	par(mfrow=c(4,1))
-	cols <- c(rgb(0,1,0,alpha=.4), rgb(1,0,0,alpha=.4))
-	maxy <- max(smoy,na.rm=T)
-	rawy <- smoy
-	for (i in sample(seq(nrow(smoy)),n_plot)){
-		plot(NA, xlim=c(min(x), max(x)), ylim=c(0,maxy))
-		
-		col <- rep(rgb(0,1,0,alpha=.4),length(SOS[i,]))
-		col[SOS[i,] > EOS[i,]] <- rgb(1, 0, 0, alpha=.4)
-		rect(SOS[i,], 0, EOS[i,], maxy, col=col)
-		abline(v=SOS[i,],col='green',lw=2)
-		abline(v=EOS[i,],col='red',lw=2)
-	
-		abline(v=yearidx, col='black',lty=3)
-		abline(v=yearidx2, col='blue',lty=1)
-		points(x, rawy[i,], col='black', pch='+', cex=.5)
-		lines(x, smoy[i,], col='blue')
-		
-	}
-	dev.off()
-	cat('ok')
-}
-
-#' Create a new loess smoothed variable from an existing variable. 
-#' Loess applied to each slice in dim 3 [i,j,:]  
-LOESS_Var <- function(info, nc, srcvar, newvar, units, missval, span=5, maxna=0.2){
-	cat('\nloess smooth', srcvar,'...')
-	start <- Sys.time()
-
-	#create new derived variable if does not already exist
-	if (!(newvar %in% names(nc$var))){ 
-		cat('\n\tcreate var')	
-		close.ncdf( nc )
-		nc <- open.ncdf(info$netcdf, write=TRUE) # open for writing and create variable
-		var <- var.def.ncdf(newvar, units, list(nc$dim[['x']], nc$dim[['y']], nc$dim[['t']]), missval)
-		nc <- var.add.ncdf( nc, var )
-	}
-	close.ncdf(nc) # close the current file
-	
-	# get parent variable and apply smooth function
-	nc <- open.ncdf(info$netcdf,write=TRUE)
-	srcdata <- get.var.ncdf(nc, srcvar)
-	srcdata[srcdata == missval] <- NA
-	rowdata <- apply(srcdata,3,rbind)
-	newdata <- t(apply(rowdata, 1, LOESS_smooth, x=info$dates$integer, span=span/ncol(srcdata) ))
-	newdata <- array(newdata,dim=dim(srcdata))
-	
-	put.var.ncdf( nc, 'sevi', newdata)
-	close.ncdf(nc)
-	
-	# reopen updated file for reading 
-	nc <- open.ncdf(info$netcdf)
-	cat(format(Sys.time() - start))
-	return(nc)
-}
-
-#' gaussian local regression fit (LOESS)
-LOESS_smooth <- function(y, x, span){
-	nacount <- sum(is.na(y))
-	if (nacount > 40){
-		return(y*NA)
-	}
-	fit <- loess(y ~ x, 
-			na.action=na.exclude,
-			family='gaussian',
-			degree=1,
-			span=span
-	)
-	
-	pred <- as.integer(predict(fit, newvals=x))
-	return(pred)
 }

@@ -13,7 +13,7 @@ Outputs:
 Requires:
 - numpy
 - netCDF4
-- arcpy, spatial analyst
+- arcpy 10.1, spatial analyst
 - pyYAML
     
 Procedure:
@@ -40,54 +40,50 @@ Procedure:
 Example Config File
 ===================
 
-# general, paths, rain year cutoff  
-abbrev  : abq                                     # abbrev used to create names and expected in many file names                
-name    : Albuquerque                             # study full name 
-gdb     : I:\\urbphen\\ws_done\\datasets\\abq.gdb # source GDB of EVI rasters 
+abbrev  : abq                                     # abbrev, file prefix
+name    : Albuquerque                             # full name 
+gdb     : I:\\urbphen\\ws_done\\datasets\\abq.gdb # source gdb containing EVI rasters ie abq_2004121 
 outpath : I:\\urbphen\\netcdf\\abq                # created output folder
-yaml    : I:\\urbphen\\netcdf\\abq\\info.yaml     # output of parameters used for this run
-netcdf  : I:\\urbphen\\netcdf\\abq\\data.nc       # output data file
+yaml    : I:\\urbphen\\netcdf\\abq\\info.yaml     # output of input config parameters
+netcdf  : I:\\urbphen\\netcdf\\abq\\data.nc       # output netcdf data file
 
 climate_type: semiarid   # not important
-climate_rank: 3          # controls ordering on plots
+climate_rank: 3          # controls ordering on some plots
 rainyearmonth : 12       # rain year cutoff month 
 rainyearday : 31         # rain year cutoff day
 maxt        : null       # max number of time steps
-importmodis : True       # import modis
-airportwx   : True       # import airport weather
-prism_ppt   : False      # import prism ppt
+importmodis : True       # (True|False) import modis evi data 
+airportwx   : True       # (True|False) import airport weather
+prism_ppt   : False      # (True|False) import prism ppt
 
-# add annual prism ppt variable
-AnnualPrism:
-  var: APRI
-  path: 'I:\\urbphen\\AnnualPrism\\us_ppt'
+AnnualPrism:   # add prism annual ppt total on first period of month, 0 for others 
+  var: APRI    # Output variable 
+  path: 'I:\\urbphen\\AnnualPrism\\us_ppt' # input file
 
-# census data 
-JoinCensus:
-  tractshp : I:\\urbphen\\JoinedCensusTracts\\abq.shp
-  extractfields:
+JoinCensus:                                             # extract data from census shapefiles 
+  tractshp : I:\\urbphen\\JoinedCensusTracts\\abq.shp   # input census tract shapefile
+  extractfields:                                        # sample these fields to netcdf variables 
     - FAVINC0
     - BLTBEF80
     - BLTAFT80
-
-# input / output landcover file, reclassification mapping
-NLCD_Prep:
-  file: I:\\urbphen\\NLCD2001\\save\\abq0
-  outfile : I:\\urbphen\\NLCD2001\\abq1
-  origvals: [11, 12, 21, 22, 23, 24, 31, 41, 42, 43, 52, 71, 81, 82, 90, 95]   
+ 
+NLCD_Prep: # Generalize landcover from 30m to 250m using majority category if > THRESH otherwise NA
+  file: I:\\urbphen\\NLCD2001\\save\\abq0  # input file 
+  outfile : I:\\urbphen\\NLCD2001\\abq1    # created file 
+  thresh : 0.70                            # aggregation threshold
+  origvals: [11, 12, 21, 22, 23, 24, 31, 41, 42, 43, 52, 71, 81, 82, 90, 95] # reclassify category mapping
   newvals : [10, 10, 21, 21, 23, 23, 30, 40, 40, 40, 50, 50, 81, 82, 90, 90]
-  thresh : 0.70 # aggregation minimum threshold
-
-landcover:
-  file: I:\\urbphen\\NLCD2001\\abq1
-  name : NLCD
-  dtype: i1
-  units: land cover category
+  
+landcover:                           # Create landcover variable 
+  file: I:\\urbphen\\NLCD2001\\abq1  # input file
+  name : NLCD                        # created variable name
+  dtype: i1                          # created variable data type
+  units: land cover category         # units description string 
   description: Land cover aggregated from NLCD 2001
 
-scale       : 0.035                             # scale for plotting maps
-nlcdcol: I:\\urbphen\\NLCD2006\\nlcdinfo.csv    # csv file of color preferences
-excludevars:                                    # variables not summarized
+scale       : 0.035                             # scale for plotting maps in R 
+nlcdcol: I:\\urbphen\\NLCD2006\\nlcdinfo.csv    # csv file mapping land cover codes,labels,colors
+excludevars:                                    # skip summarization for these variables 
   - xcoord
   - ycoord
   - tcoord
@@ -182,7 +178,7 @@ def RunConfig(info):
     WriteYaml(info)
     return None
 
-def RunSubprocess(Rcmd,info):
+def RunSubprocess(Rcmd, info):
     cmd = 'RScript "%s" "%s"' % (Rcmd, info['outpath'])
     print cmd
     proc = subprocess.Popen(cmd, shell=True)#, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -190,7 +186,7 @@ def RunSubprocess(Rcmd,info):
         time.sleep(10)
     
 def ClipModisGDB(info, refraster, outpath, outgdb):
-    """ """
+    """ clip input gdb to another extent and store as new gdb"""
     arcpy.env.workspace = info['gdb']
     rasters = arcpy.ListRasters('*')
     arcpy.env.snapraster = refraster
@@ -215,17 +211,18 @@ def ClipModisGDB(info, refraster, outpath, outgdb):
         print 'Clipped %s' % raster
     
 def ImportModisGDB(info):
-    """Import MODIS evi time series"""
+    """Import MODIS evi time series from gdb containing time stamped rasters """
     print 'Create Dataset "%s" at %s' % (info['abbrev'], info['outpath'])
-    #info['runtimer'] = {'PreProc_s':datetime.datetime.now()}
     
     if os.path.exists(info['outpath']):
         shutil.rmtree(info['outpath'])
+    
     os.mkdir(info['outpath'])
     
     #list the modis evi rasters in the gdb
     files, qafiles, times = ListEVIRasters(info['abbrev'], info['gdb'], info['maxt'])
     
+    # get parameters required for creating the netcdf file 
     info = GetRefGrid(info, files[0], times)
 
     # create a netcdf file to hold the (x,y,t) data
