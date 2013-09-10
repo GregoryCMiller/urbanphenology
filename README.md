@@ -20,4 +20,4 @@ Data and analysis procedures used in
 
 ### Author
 
-[Greg Miller](gmill002@gmail.com)
+Greg Miller gmill002@gmail.com
