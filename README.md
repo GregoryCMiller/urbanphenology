@@ -6,7 +6,7 @@ Data and analysis procedures used in
 > Darrel Jenerette, Greg Miller, Alexander Buyantuyev, Diane E Pataki, Thomas Gillespie, Stephanie Pincetl. 
 > Urban vegetation dynamics and income segregation in drylands: 
 >   A synthesis of seven metropolitan regions in the southwestern United States. 
-> Environmental Research Letters (in review)
+> Environmental Research Letters
 
 ### Code Files
 
