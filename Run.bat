@@ -1,3 +1,6 @@
+:: Windows batch script to process all study areas
+:: turn off sleep and standby modes
+:: run each area, pipe output to <x>log.txt 
 powercfg -change -hibernate-timeout-ac 0
 powercfg -change -standby-timeout-ac 0
 
