@@ -1,3 +1,5 @@
+#Copyright (C) 2013 Greg Miller <gmill002@gmail.com>
+
 #' Phenology calculation functions and summaries
 
 
