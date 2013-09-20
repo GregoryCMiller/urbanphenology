@@ -1,3 +1,5 @@
+#Copyright (C) 2013 Greg Miller <gmill002@gmail.com>
+
 #' functions for comparing multiple study results 
 library(yaml)
 library(abind)
