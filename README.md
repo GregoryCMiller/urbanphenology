@@ -24,4 +24,3 @@ Greg Miller gmill002@gmail.com
 
 This work was partly supported by the National Science Foundation Division of Environmental Biology 0919006, 0919381, 0918905, 0814692, 3151049224
 
-[University of California, Riverside - Center for Conservation Biology](http://ccb.ucr.edu/)
