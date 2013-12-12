@@ -8,7 +8,8 @@ Darrel Jenerette, Greg Miller, Alexander Buyantuyev, Diane E Pataki, Thomas Gill
 A synthesis of seven metropolitan regions in the southwestern United States. 
 Environmental Research Letters 8(4), 044001.
 
-### Code Files
+Code Files
+----------
 
 ============  ==================================================================
 File          Description                                                 
@@ -20,7 +21,8 @@ phenology.R   phenology metrics, means by groups
 compare.R     Aggregate and compare results from multiple studies         
 ============  ==================================================================
 
-### Author
+Author
+------
 
 Greg Miller gmill002@gmail.com
 
